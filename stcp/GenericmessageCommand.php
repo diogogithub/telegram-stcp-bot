@@ -158,7 +158,7 @@ class GenericmessageCommand extends SystemCommand
     {
         $stcp_ep_paragens = "https://www.stcp.pt/pt/itinerarium/callservice.php?action=linestops&lcode={$linha}&ldir={$sentido}";
 
-        $ch = stcp_http_request($stcp_ep_paragens);
+        $ch = $this->stcp_http_request($stcp_ep_paragens);
         $response = curl_exec($ch);
         if (curl_errno($ch)) {
             return 'Error:' . curl_error($ch);
@@ -167,12 +167,12 @@ class GenericmessageCommand extends SystemCommand
 
         $data = json_decode($response, true);
 
-        // primeira a ultima paragem
+        // primeira e ultima paragem
         $first = $data['records'][0]['name'];
         $last = end($data['records'])['name'];
 
         $paragens = "";
-        $paragens = "Linha {$linha}: {$first} - {$last}" . PHP_EOL;
+        $paragens .= "Linha {$linha}: {$first} - {$last}" . PHP_EOL;
 
         // Appending each element's name and code to the string variable
         foreach ($data['records'] as $record) {
