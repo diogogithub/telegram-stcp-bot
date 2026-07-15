@@ -34,6 +34,20 @@ $assertSame = static function (mixed $expected, mixed $actual, string $message):
     }
 };
 
+$assertContains = static function (string $needle, string $haystack, string $message): void {
+    if (!str_contains($haystack, $needle)) {
+        fwrite(STDERR, sprintf("FAIL: %s\nMissing: %s\n", $message, $needle));
+        exit(1);
+    }
+};
+
+$assertNotContains = static function (string $needle, string $haystack, string $message): void {
+    if (str_contains($haystack, $needle)) {
+        fwrite(STDERR, sprintf("FAIL: %s\nUnexpected: %s\n", $message, $needle));
+        exit(1);
+    }
+};
+
 $html = <<<'HTML'
 <a href="/pt/linha?line=205"><strong>205</strong> Campanhã – Castelo do Queijo</a>
 <a href="/pt/linha?line=107">ZC Zona Centro</a>
@@ -73,4 +87,23 @@ foreach ($chunks as $chunk) {
     $assertSame(1, preg_match('//u', $chunk), 'Telegram message chunks remain valid UTF-8');
 }
 
-fwrite(STDOUT, "All STCP client tests passed.\n");
+$startSource = file_get_contents(dirname(__DIR__) . '/commands/StartCommand.php');
+$genericSource = file_get_contents(dirname(__DIR__) . '/commands/GenericmessageCommand.php');
+$assertNotContains('$private_only = true', $startSource, '/start does not trigger Longman private-chat DMs');
+$assertNotContains('$private_only = true', $genericSource, 'generic messages do not trigger Longman private-chat DMs');
+$assertContains('isPrivateChat()', $startSource, '/start explicitly ignores group calls');
+$assertContains('isPrivateChat()', $genericSource, 'ordinary group messages are explicitly ignored');
+
+foreach ([
+    'MychatmemberCommand.php',
+    'NewchatmembersCommand.php',
+    'LeftchatmemberCommand.php',
+    'GroupchatcreatedCommand.php',
+    'SupergroupchatcreatedCommand.php',
+] as $handler) {
+    $source = file_get_contents(dirname(__DIR__) . '/commands/' . $handler);
+    $assertContains('Request::emptyResponse()', $source, "{$handler} is silent");
+    $assertContains('$show_in_help = false', $source, "{$handler} is hidden from help");
+}
+
+fwrite(STDOUT, "All STCP client and group-behaviour tests passed.\n");
