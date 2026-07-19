@@ -1,139 +1,133 @@
-# STCP Telegram Bot
+# STCP Chatbot
 
-I wrote this small Telegram bot to make it quicker to check STCP information while moving around Porto. It accepts a stop code and returns the next expected passages, or a line code and returns the stops in both directions.
+A self-hosted, multi-platform chatbot for checking STCP stops and lines from Telegram, Discord and Matrix.
 
-The live instance is available as [`@stcp_bot`](https://t.me/stcp_bot).
+The same PHP domain layer powers all three transports. Telegram receives HTTPS webhooks, Discord runs a persistent Gateway worker, and Matrix uses a small Node.js adapter with end-to-end encryption for direct conversations.
 
-This is an independent, unofficial project. It is not affiliated with, endorsed by, or operated by STCP.
+## Live instance
+
+- Telegram: [`@stcp_bot`](https://t.me/stcp_bot)
+- Discord: [add STCP Bot to a server](https://discord.com/oauth2/authorize?client_id=1528488532232900618&scope=bot&permissions=68608)
+- Matrix: [`@stcp:ndef.dev`](https://matrix.to/#/@stcp:ndef.dev)
+
+The Matrix deployment accepts direct conversations only and encrypts them end to end.
 
 ## What it does
 
-- `/paragem <código>` shows the next expected passages at a stop;
-- `/linha <código>` lists the stops of a line in both directions;
-- a stop code such as `FCUP1` can be sent directly;
-- a line code such as `404`, `1M` or `ZC` can also be sent directly.
-
-The replies and command descriptions are currently in European Portuguese.
-
-## How it works
-
-The bot reads the JSON services used by the current STCP website for real-time arrivals and route stops. Public line codes do not always match the internal identifiers used by those services, so the client resolves the mapping from the STCP line list and retains a small fallback for known exceptions such as `ZC`.
-
-These website interfaces are not documented as a stable public API. A future STCP website change may therefore require an update to the client.
-
-HTTP requests use HTTPS certificate verification, bounded connection and request timeouts, and this browser user agent:
-
 ```text
-Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36
+paragem FCUP1        next expected passages at a stop
+linha 204            stops served by a line, in both directions
+casa FCUP1           save a home stop
+trabalho TRND1       save a work stop
+casa                 query the saved home stop
+trabalho             query the saved work stop
+favoritos            show both saved stops
+avisos_off           opt out of administrator announcements
+avisos_on            opt back in
+privacidade          explain retained data
+apagar_dados CONFIRMAR
+ajuda
 ```
 
-I keep this repository focused on my own code. The Telegram framework and the other third-party packages are declared through Composer and are not copied into the repository.
+A stop code such as `FCUP1` or a line such as `204`, `1M` or `ZC` may also be sent directly.
+
+Replies and command descriptions are currently written in European Portuguese.
+
+## Platform behaviour
+
+- **Telegram:** private chats work without a prefix. In groups, use a slash command or the configured prefix, which defaults to `!stcp`.
+- **Discord:** direct messages work without a prefix. In server channels, mention the bot or start the message with `!stcp`.
+- **Matrix:** encrypted direct rooms only. The worker rejects rooms containing more than the bot and one other Matrix user.
+
+## Architecture
+
+```text
+Telegram webhook ─┐
+Discord worker ────┼─> IncomingMessage -> BotService -> BotRouter -> STCP client
+Matrix E2EE worker ┘                                  |
+                                                       v
+                                                SQLite store
+                                                       |
+                                                admin dashboard
+```
+
+Identities and conversations are isolated by platform:
+
+```text
+UNIQUE(platform, external_user_id)
+UNIQUE(platform, external_chat_id)
+```
+
+A Telegram user, Discord user and Matrix user are separate identities even when their numeric or textual IDs happen to match.
+
+See [Architecture](docs/ARCHITECTURE.md) for the complete data and message flow.
 
 ## Requirements
 
-- PHP 8.1 or newer;
-- the PHP cURL, JSON, Mbstring and PDO extensions;
+Core application:
+
+- PHP 8.4.1 or newer;
 - Composer;
-- a Telegram bot token and username created with BotFather.
+- PHP cURL, JSON, Mbstring, PDO SQLite and Sodium extensions;
+- a web server with HTTPS for Telegram and the dashboard.
+
+Additional transports:
+
+- Discord requires a long-running PHP CLI process;
+- Matrix E2EE requires Node.js 22 or newer and a Matrix account/device access token.
 
 ## Installation
 
 ```sh
-git clone https://github.com/diogogithub/telegram-stcp-bot.git
-cd telegram-stcp-bot
-composer install
-cp .env.example .env
+git clone https://github.com/diogogithub/stcp-chatbot.git
+cd stcp-chatbot
+composer install --no-dev --classmap-authoritative
+cp config.example.php config.php
+php bin/password.php
 ```
 
-Fill in at least these values in `.env`:
+Edit `config.php`, create the writable storage directories, and point the web-server document root at `public/`.
 
-```dotenv
-TELEGRAM_BOT_TOKEN=123456789:replace-me
-TELEGRAM_BOT_USERNAME=replace_me_bot
-```
+The complete installation and production-hardening procedure is in [Installation](docs/INSTALLATION.md).
 
-The application reads normal environment variables; it does not parse `.env` automatically. For a local shell session, the file can be loaded with:
+Platform guides:
 
-```sh
-set -a
-. ./.env
-set +a
-```
-
-`TELEGRAM_ADMIN_IDS` is optional and accepts comma-separated numeric Telegram user IDs.
-
-## Running with long polling
-
-Long polling is the simplest option for local development or a supervised command-line process:
-
-```sh
-php bin/poll.php
-```
-
-Only one polling process should run for a bot token. An existing webhook must be removed first:
-
-```sh
-php bin/delete-webhook.php
-```
-
-## Running with a webhook
-
-Point the web server document root at `public/`, or expose only `public/webhook.php`. The rest of the repository, including `vendor/`, should not be directly web-accessible.
-
-Set the public HTTPS URL and a secret token:
-
-```dotenv
-TELEGRAM_WEBHOOK_URL=https://example.org/webhook.php
-TELEGRAM_WEBHOOK_SECRET=replace-with-a-long-random-value
-```
-
-Register the webhook with:
-
-```sh
-php bin/set-webhook.php
-```
-
-Remove it with:
-
-```sh
-php bin/delete-webhook.php
-```
-
-Pass `--drop-pending` only when old queued updates should also be discarded.
+- [Telegram](docs/TELEGRAM.md)
+- [Discord](docs/DISCORD.md)
+- [Matrix E2EE](docs/MATRIX.md)
+- [Admin dashboard and announcements](docs/ADMIN-DASHBOARD.md)
+- [Production deployment](docs/PRODUCTION.md)
+- [Migration from the former Telegram-only bot](docs/MIGRATION.md)
 
 ## Development
-
-Install the development dependencies and run all checks with:
 
 ```sh
 composer install
 composer check
+
+cd matrix
+npm ci
+npm run check
 ```
 
-This validates the Composer files, checks PHP syntax and PSR-12 formatting, and runs the dependency-free STCP parser tests.
+The PHP checks validate Composer metadata, lint PHP files, enforce PSR-12 and run PHPUnit. Matrix checks validate the JavaScript entry points without connecting to a homeserver.
 
-The project-specific code is organised as follows:
+## Data and privacy
 
-```text
-bin/       command-line entry points
-commands/  Telegram command handlers
-public/    webhook entry point
-src/       configuration, bot setup, reply handling and STCP client
-tests/     local parser and formatting tests
-```
+The SQLite database stores platform-scoped identifiers, chat identifiers, optional profile metadata, saved home/work stops, interaction counters and announcement-delivery state. It does not intentionally store message contents.
 
-`composer.lock` is committed because this is an application and deployments should resolve the same dependency versions. The generated `vendor/` directory must remain untracked.
+Users can inspect the privacy notice with `privacidade`, opt out of announcements with `avisos_off`, and delete their identity-scoped data with `apagar_dados CONFIRMAR`.
 
-## Security
+See [Security](SECURITY.md) and [Privacy and retention](docs/PRIVACY.md).
 
-Never commit a Telegram token, webhook secret, local `.env` file or logs. Anyone who obtains the bot token can control the bot, so an exposed token must be revoked and replaced through BotFather.
+## STCP data source
 
-The webhook secret remains optional so local setups stay simple, but I strongly recommend setting it for every public deployment.
+The bot reads JSON services used by the public STCP website for real-time arrivals and route stops. Those interfaces are not documented here as a stable public API. An STCP website change may therefore require an update to the client.
 
-Please see [SECURITY.md](SECURITY.md) for reporting security-sensitive issues.
+## Disclaimer
+
+This is an independent, unofficial project. It is not affiliated with, endorsed by, or operated by STCP.
 
 ## Licence
 
-I release this project under the MIT Licence. See [LICENSE](LICENSE).
-
-The runtime depends on [`longman/telegram-bot`](https://github.com/php-telegram-bot/core), which Composer retrieves under its own licence.
+MIT. See [LICENSE](LICENSE).

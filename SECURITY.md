@@ -1,7 +1,23 @@
-# Security Policy
+# Security policy
 
-Please do not publish active Telegram tokens, webhook secrets or other credentials in an issue, commit, log excerpt or screenshot.
+Please report security-sensitive issues privately to `mail@diogo.site` rather than opening a public issue.
 
-For a security-sensitive report, contact me privately through the channels listed on [diogo.site](https://www.diogo.site/). Include the affected version, a concise reproduction and the practical impact. Please avoid testing against a bot or server that you do not control.
+Do not include live bot tokens, access tokens, passwords, private keys, production databases or Matrix crypto stores in reports.
 
-A leaked Telegram bot token should be revoked immediately through BotFather; removing it from the latest commit is not sufficient if it remains in Git history.
+## Secrets
+
+Never commit:
+
+- `config.php`;
+- Telegram or Discord bot tokens;
+- Matrix access tokens;
+- Synapse administrator tokens;
+- the production SQLite database;
+- `storage/matrix/`;
+- logs or configuration backups.
+
+If a platform token is exposed, revoke and replace it through that platform immediately. Removing it from a later Git commit is not sufficient.
+
+## Supported version
+
+Security fixes are applied to the latest revision of the default branch. This is a small independent project and does not currently maintain parallel release branches.

@@ -1,0 +1,14 @@
+[Unit]
+Description=Clean old STCP Chatbot event and analytics data
+
+[Service]
+Type=oneshot
+User=stcp-chatbot
+Group=stcp-chatbot
+WorkingDirectory=/opt/stcp-chatbot
+ExecStart=/usr/bin/php /opt/stcp-chatbot/bin/cleanup.php
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/opt/stcp-chatbot/storage

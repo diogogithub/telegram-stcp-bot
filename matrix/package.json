@@ -1,0 +1,16 @@
+{
+  "name": "stcp-chatbot-matrix-adapter",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Matrix E2EE transport adapter for STCP Chatbot",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "dependencies": {
+    "matrix-bot-sdk": "0.8.0"
+  },
+  "scripts": {
+    "check": "node --check worker.js && node --check verify-runtime.js && node --check bootstrap-cross-signing.js"
+  }
+}

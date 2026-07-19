@@ -1,0 +1,21 @@
+[Unit]
+Description=STCP Chatbot announcement delivery worker
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=stcp-chatbot
+Group=stcp-chatbot
+WorkingDirectory=/opt/stcp-chatbot
+ExecStart=/usr/bin/php /opt/stcp-chatbot/bin/announcement-worker.php --loop
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/opt/stcp-chatbot/storage
+
+[Install]
+WantedBy=multi-user.target

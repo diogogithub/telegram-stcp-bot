@@ -1,52 +1,44 @@
 {
-    "name": "diogogithub/stcp-telegram-bot",
-    "type": "project",
-    "description": "Unofficial Telegram bot for STCP stop arrivals and route information in Porto",
-    "keywords": [
-        "bot",
-        "porto",
-        "public-transport",
-        "stcp",
-        "telegram"
-    ],
-    "license": "MIT",
-    "authors": [
-        {
-            "name": "Diogo Peralta Cordeiro",
-            "homepage": "https://www.diogo.site/"
-        }
-    ],
-    "require": {
-        "php": "^8.1",
-        "ext-curl": "*",
-        "ext-json": "*",
-        "ext-mbstring": "*",
-        "ext-pdo": "*",
-        "longman/telegram-bot": "^0.83.1"
-    },
-    "require-dev": {
-        "php-parallel-lint/php-parallel-lint": "^1.4",
-        "squizlabs/php_codesniffer": "^3.11"
-    },
-    "autoload": {
-        "psr-4": {
-            "Diogo\\StcpTelegramBot\\": "src/"
-        }
-    },
-    "scripts": {
-        "check": [
-            "@validate",
-            "@lint",
-            "@style",
-            "@test"
-        ],
-        "lint": "parallel-lint --exclude vendor .",
-        "style": "phpcs",
-        "test": "php tests/run.php",
-        "validate": "composer validate --strict"
-    },
-    "config": {
-        "optimize-autoloader": true,
-        "sort-packages": true
+  "name": "diogogithub/stcp-chatbot",
+  "description": "Multi-platform STCP chatbot for Telegram, Discord and Matrix.",
+  "type": "project",
+  "license": "MIT",
+  "require": {
+    "php": "^8.4.1",
+    "ext-curl": "*",
+    "ext-json": "*",
+    "ext-mbstring": "*",
+    "ext-pdo": "*",
+    "ext-pdo_sqlite": "*",
+    "ext-sodium": "*",
+    "guzzlehttp/guzzle": "^7.9",
+    "longman/telegram-bot": "^0.83.1",
+    "team-reflex/discord-php": "^10.51"
+  },
+  "require-dev": {
+    "php-parallel-lint/php-parallel-lint": "^1.4",
+    "phpunit/phpunit": "^11.5",
+    "squizlabs/php_codesniffer": "^3.13"
+  },
+  "autoload": {
+    "psr-4": {
+      "Diogo\\StcpChatbot\\": "src/"
     }
+  },
+  "scripts": {
+    "check": [
+      "@validate",
+      "@lint",
+      "@cs",
+      "@test"
+    ],
+    "validate": "composer validate --strict",
+    "lint": "parallel-lint --exclude vendor .",
+    "cs": "phpcs",
+    "test": "phpunit --testdox"
+  },
+  "config": {
+    "sort-packages": true,
+    "allow-plugins": {}
+  }
 }

@@ -2,12 +2,18 @@
 
 Bug reports and focused pull requests are welcome.
 
-Before submitting a change:
+Before submitting code:
 
-1. keep credentials, local configuration, logs and generated dependencies out of the repository;
-2. run `composer check`;
-3. describe the STCP response or markup change that motivated parser modifications;
-4. add or update a local parser test when practical;
-5. avoid copying third-party source files that can be declared through Composer.
+```sh
+composer install
+composer check
+cd matrix
+npm ci
+npm run check
+```
 
-Please keep user-facing bot messages in European Portuguese unless the change introduces an explicit localisation mechanism.
+Keep platform-specific event parsing and sending inside adapters. Shared command behaviour belongs in the PHP core, and persistence changes belong in `Store` with tests.
+
+Do not commit credentials, production data, generated dependencies or Matrix crypto state.
+
+The STCP website interfaces used by the client are not documented as stable APIs. When changing parsers, include anonymised fixtures or tests that demonstrate the expected response shape.
