@@ -6,7 +6,6 @@
     <arg value="sp"/>
     <file>src</file>
     <file>public</file>
-    <file>bin</file>
     <file>tests</file>
     <exclude-pattern>vendor/*</exclude-pattern>
     <rule ref="PSR12"/>
